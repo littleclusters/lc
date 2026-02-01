@@ -278,8 +278,8 @@ func (do *Do) Concurrently(fns ...func()) {
 	}
 }
 
-// HTTP creates a deferred HTTP request.
-func (do *Do) HTTP(name, method, path string, args ...any) *HTTPPromise {
+// HTTP creates a test plan for an HTTP request.
+func (do *Do) HTTP(name, method, path string, args ...any) *HTTPPlan {
 	proc := do.getProcess(name)
 	url := fmt.Sprintf("http://127.0.0.1:%d%s", proc.realPort, path)
 
@@ -293,8 +293,8 @@ func (do *Do) HTTP(name, method, path string, args ...any) *HTTPPromise {
 		headers = args[1].(H)
 	}
 
-	return &HTTPPromise{
-		PromiseBase: PromiseBase{
+	return &HTTPPlan{
+		PlanBase: PlanBase{
 			timing: TimingImmediate,
 			ctx:    do.ctx,
 			config: do.config,
@@ -307,10 +307,10 @@ func (do *Do) HTTP(name, method, path string, args ...any) *HTTPPromise {
 	}
 }
 
-// Exec creates a deferred CLI command execution.
-func (do *Do) Exec(args ...string) *CLIPromise {
-	return &CLIPromise{
-		PromiseBase: PromiseBase{
+// Exec creates a test plan for a CLI command execution.
+func (do *Do) Exec(args ...string) *CLIPlan {
+	return &CLIPlan{
+		PlanBase: PlanBase{
 			timing: TimingImmediate,
 			ctx:    do.ctx,
 			config: do.config,

@@ -49,11 +49,10 @@ func consistently(ctx context.Context, condition func() bool, timeout, pollInter
 }
 
 // Assert defines the interface for executing and validating test assertions.
-// Implementations handle domain-specific operations like HTTP requests or CLI commands.
 type Assert interface {
-	// Assert executes the operation and validates the result.
+	// Assert executes the test plan and validates the result.
 	Assert(help string)
-	// execute executes the operation once and returns whether it meets expectations.
+	// execute runs the test plan once and returns whether it meets expectations.
 	execute() bool
 	// check validates the result and panics with formatted error message on failure.
 	check()
@@ -79,7 +78,7 @@ func (a *AssertBase) formatHelp() string {
 type HTTPAssert struct {
 	AssertBase
 
-	promise        *HTTPPromise
+	plan           *HTTPPlan
 	responseBody   string
 	responseStatus int
 
@@ -115,7 +114,7 @@ func (a *HTTPAssert) JSON(path string, checkers ...Checker[string]) *HTTPAssert 
 func (a *HTTPAssert) Assert(help string) {
 	a.help = help
 
-	p := a.promise
+	p := a.plan
 	switch p.timing {
 	case TimingEventually:
 		eventually(p.ctx, a.execute, p.timeout, a.config.RetryPollInterval)
@@ -130,7 +129,7 @@ func (a *HTTPAssert) Assert(help string) {
 
 func (a *HTTPAssert) execute() bool {
 	client := &http.Client{Timeout: a.config.ExecuteTimeout}
-	p := a.promise
+	p := a.plan
 
 	req, err := http.NewRequestWithContext(p.ctx, p.method, p.url, bytes.NewReader(p.body))
 	if err != nil {
@@ -161,7 +160,7 @@ func (a *HTTPAssert) execute() bool {
 }
 
 func (a *HTTPAssert) check() {
-	p := a.promise
+	p := a.plan
 
 	checkAll(a.responseStatus, a.statusCheckers, func(m Checker[int], actual int) {
 		msg := fmt.Sprintf("%s %s\n  Expected status: %s\n  Actual status: %d %s%s",
@@ -187,7 +186,7 @@ func (a *HTTPAssert) check() {
 type CLIAssert struct {
 	AssertBase
 
-	promise  *CLIPromise
+	plan     *CLIPlan
 	output   string
 	exitCode int
 
@@ -212,7 +211,7 @@ func (a *CLIAssert) Output(checkers ...Checker[string]) *CLIAssert {
 func (a *CLIAssert) Assert(help string) {
 	a.help = help
 
-	p := a.promise
+	p := a.plan
 	switch p.timing {
 	case TimingEventually:
 		eventually(p.ctx, a.execute, p.timeout, a.config.RetryPollInterval)
@@ -226,7 +225,7 @@ func (a *CLIAssert) Assert(help string) {
 }
 
 func (a *CLIAssert) execute() bool {
-	p := a.promise
+	p := a.plan
 
 	ctx, cancel := context.WithTimeout(p.ctx, a.config.ExecuteTimeout)
 	defer cancel()
@@ -258,7 +257,7 @@ func (a *CLIAssert) execute() bool {
 }
 
 func (a *CLIAssert) check() {
-	p := a.promise
+	p := a.plan
 
 	checkAll(a.exitCode, a.exitCheckers, func(m Checker[int], actual int) {
 		msg := fmt.Sprintf("%s %s\n  Expected exit code: %s\n  Actual exit code: %d%s",
