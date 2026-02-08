@@ -8,7 +8,7 @@ import (
 
 const statePath = "lc.state"
 
-// State represents the lc.state file structure.
+// State represents the challenge progress.
 type State struct {
 	Challenge string
 	Stage     string
