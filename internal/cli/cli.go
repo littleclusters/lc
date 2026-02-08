@@ -247,7 +247,6 @@ func NextStage(ctx context.Context, cmd *commands.Command) error {
 	// Check if already at final stage
 	if currentIndex == challenge.Len()-1 {
 		fmt.Printf("You've completed all stages for %s! 🎉\n\n", cfg.Challenge)
-		fmt.Printf("If you're on GitHub, consider adding 'lc' and 'lc-<language>' (e.g., 'lc-go', 'lc-rust') as topics to your repository.\n\n")
 		fmt.Printf("Try another challenge at \033]8;;%s/\033\\%s\033]8;;\033\\\n", DocsBaseURL, DocsBaseURL)
 
 		return config.Save(cfg)
