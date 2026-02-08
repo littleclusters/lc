@@ -1,4 +1,4 @@
-module github.com/st3v3nmw/lsfr
+module github.com/littleclusters/lc
 
 go 1.25
 

@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/st3v3nmw/lsfr/internal/cli"
+	"github.com/littleclusters/lc/internal/cli"
 	commands "github.com/urfave/cli/v3"
 )
 
@@ -15,7 +15,7 @@ func main() {
 	log.SetFlags(0)
 
 	cmd := &commands.Command{
-		Name:  "lsfr",
+		Name:  "lc",
 		Usage: "Build complex systems from scratch",
 		Commands: []*commands.Command{
 			{

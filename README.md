@@ -1,4 +1,4 @@
-# lsfr
+# `lc` CLI
 
 _Build distributed systems from scratch._
 
@@ -9,31 +9,31 @@ Progressive challenges to learn distributed systems and other complex systems by
 Install:
 
 ```console
-$ go install github.com/st3v3nmw/lsfr/cmd/lsfr@latest
+$ go install github.com/littleclusters/lc/cmd/lc@latest
 ```
 
 Or with Homebrew:
 
 ```console
-$ brew tap st3v3nmw/tap
-$ brew install st3v3nmw/tap/lsfr
+$ brew tap littleclusters/tap
+$ brew install littleclusters/tap/lc
 ```
 
-See [lsfr.io](https://lsfr.io/guides/cli/#installation) for version pinning and other installation methods.
+See [littleclusters.com](https://littleclusters.com/guides/cli/#installation) for version pinning and other installation methods.
 
 Start a challenge:
 
 ```console
-$ lsfr list             # List available challenges
-$ lsfr init kv-store    # Create challenge in current directory
-$ lsfr test             # Test your implementation
-$ lsfr next             # Advance to the next stage
+$ lc list             # List available challenges
+$ lc init kv-store    # Create challenge in current directory
+$ lc test             # Test your implementation
+$ lc next             # Advance to the next stage
 ```
 
 ## How it Works
 
 Write code, run tests, get detailed feedback. Progress through stages as you build real systems.
 
-If you're on GitHub, consider adding `lsfr` and `lsfr-<language>` (e.g., `lsfr-go`, `lsfr-rust`) as topics to your repository to share your implementation.
+If you're on GitHub, consider adding `lc` and `lc-<language>` (e.g., `lc-go`, `lc-rust`) as topics to your repository to share your implementation.
 
-Learn more at [lsfr.io](https://lsfr.io).
+Learn more at [littleclusters.com](https://littleclusters.com).

@@ -7,7 +7,7 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-const configPath = "lsfr.yaml"
+const configPath = "lc.yaml"
 
 // Stages tracks the current and completed challenge stages.
 type Stages struct {
@@ -15,16 +15,16 @@ type Stages struct {
 	Completed []string `yaml:"completed"`
 }
 
-// Config represents the lsfr.yaml configuration file structure.
+// Config represents the lc.yaml configuration file structure.
 type Config struct {
 	Challenge string `yaml:"challenge"`
 	Stages    Stages `yaml:"stages"`
 }
 
-// Load reads and parses the lsfr.yaml configuration file.
+// Load reads and parses the lc.yaml configuration file.
 func Load() (*Config, error) {
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("Not in a challenge directory\nRun this command from a directory created with 'lsfr init <challenge>'")
+		return nil, fmt.Errorf("Not in a challenge directory\nRun this command from a directory created with 'lc init <challenge>'")
 	}
 
 	bytes, err := os.ReadFile(configPath)
@@ -45,7 +45,7 @@ func Load() (*Config, error) {
 	return &cfg, nil
 }
 
-// Save writes the configuration to the default lsfr.yaml file.
+// Save writes the configuration to the default lc.yaml file.
 func Save(cfg *Config) error {
 	return SaveTo(cfg, configPath)
 }
