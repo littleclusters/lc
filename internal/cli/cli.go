@@ -162,8 +162,8 @@ func runStageTests(ctx context.Context, challengeKey, stageKey string) (bool, er
 	return passed, nil
 }
 
-// TestStage runs tests for the current or specified stage.
-func TestStage(ctx context.Context, cmd *commands.Command) error {
+// Test runs tests for the specified stage(s).
+func Test(ctx context.Context, cmd *commands.Command) error {
 	cfg, err := validateEnvironment()
 	if err != nil {
 		return err
@@ -174,26 +174,61 @@ func TestStage(ctx context.Context, cmd *commands.Command) error {
 
 	switch cmd.NArg() {
 	case 0:
-		// Use current stage from state
 		challengeKey = cfg.Challenge
 		stageKey = cfg.Stage
 	case 1:
-		// lc test <stage>
 		challengeKey = cfg.Challenge
 		stageKey = cmd.Args().Slice()[0]
 	default:
 		return fmt.Errorf("Too many arguments.\nUsage: lc test [stage]")
 	}
 
-	passed, err := runStageTests(ctx, challengeKey, stageKey)
-	if passed {
-		fmt.Printf("\nRun %s to advance to the next stage.\n", yellow("'lc next'"))
-	} else {
-		guideURL := fmt.Sprintf("%s/%s/%s", DocsBaseURL, challengeKey, stageKey)
-		err = fmt.Errorf("\nRead the guide: \033]8;;%s\033\\%s/%s/%s\033]8;;\033\\\n", guideURL, DocsBaseURL, challengeKey, stageKey)
+	challenge, err := registry.GetChallenge(challengeKey)
+	if err != nil {
+		return err
 	}
 
-	return err
+	// Determine which stages to test
+	var stagesToTest []string
+	if cmd.Bool("so-far") {
+		targetIndex := challenge.StageIndex(stageKey)
+		if targetIndex == -1 {
+			return fmt.Errorf("Stage '%s' not found in challenge", stageKey)
+		}
+
+		stagesToTest = challenge.StageOrder[:targetIndex+1]
+	} else {
+		stagesToTest = []string{stageKey}
+	}
+
+	// Run tests for all stages
+	for _, currentStage := range stagesToTest {
+		passed, err := runStageTests(ctx, challengeKey, currentStage)
+		if err != nil {
+			return err
+		}
+
+		if !passed {
+			guideURL := fmt.Sprintf("%s/%s/%s", DocsBaseURL, challengeKey, currentStage)
+			return fmt.Errorf("\nRead the guide: \033]8;;%s\033\\%s/%s/%s\033]8;;\033\\\n", guideURL, DocsBaseURL, challengeKey, currentStage)
+		}
+
+		if len(stagesToTest) > 1 {
+			fmt.Println()
+		}
+	}
+
+	// Success message
+	if len(stagesToTest) > 1 {
+		fmt.Printf("All stages up to %s passed! ✓\n", stageKey)
+	}
+
+	targetIndex := challenge.StageIndex(stageKey)
+	if targetIndex < challenge.Len()-1 {
+		fmt.Printf("\nRun %s to advance to the next stage.\n", yellow("'lc next'"))
+	}
+
+	return nil
 }
 
 // NextStage advances to the next stage after verifying current stage is complete.

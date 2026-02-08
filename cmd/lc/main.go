@@ -16,7 +16,7 @@ func main() {
 
 	cmd := &commands.Command{
 		Name:  "lc",
-		Usage: "Build complex systems from scratch",
+		Usage: "Learn distributed systems by building them from scratch",
 		Commands: []*commands.Command{
 			{
 				Name:      "init",
@@ -28,9 +28,15 @@ func main() {
 			{
 				Name:      "test",
 				Aliases:   []string{"t"},
-				Usage:     "Test current or specific stage",
+				Usage:     "Test your implementation",
 				ArgsUsage: "[stage]",
-				Action:    cli.TestStage,
+				Flags: []commands.Flag{
+					&commands.BoolFlag{
+						Name:  "so-far",
+						Usage: "Test all stages up to the specified stage",
+					},
+				},
+				Action: cli.Test,
 			},
 			{
 				Name:    "next",
