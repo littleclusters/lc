@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/st3v3nmw/lsfr/internal/attest"
+	"github.com/littleclusters/lc/internal/attest"
 )
 
 const (
-	DocsBaseURL = "https://lsfr.io"
+	DocsBaseURL = "https://littleclusters.com"
 )
 
 func init() {
@@ -90,17 +90,17 @@ func (c *Challenge) README() string {
 
 1. Read the requirements for the current stage (linked above)
 2. Edit `+"`run.sh`"+` to start your implementation
-3. Run `+"`lsfr test`"+` to verify your implementation
-4. Run `+"`lsfr next`"+` to advance when tests pass
+3. Run `+"`lc test`"+` to verify your implementation
+4. Run `+"`lc next`"+` to advance when tests pass
 
 ## Resources
 
 - [Challenge Overview](%s/%s/)
-- [How lsfr Works](%s/how-lsfr-works/)
+- [How lc Works](%s/how-lc-works/)
 - [CLI Guide](%s/guides/cli/)
 - [CI/CD Setup](%s/guides/ci-cd/)
 
-Run `+"`lsfr --help`"+` to see all available commands.
+Run `+"`lc --help`"+` to see all available commands.
 `, c.Name, c.Summary, stages, DocsBaseURL, c.Key, DocsBaseURL, DocsBaseURL, DocsBaseURL)
 }
 

@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/st3v3nmw/lsfr/pkg/threadsafe"
+	"github.com/littleclusters/lc/pkg/threadsafe"
 )
 
 // Do provides the test harness and acts as the test runner.

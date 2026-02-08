@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	. "github.com/st3v3nmw/lsfr/internal/attest"
+	. "github.com/littleclusters/lc/internal/attest"
 )
 
 func Persistence() *Suite {

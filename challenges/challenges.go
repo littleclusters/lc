@@ -1,5 +1,5 @@
 package challenges
 
 import (
-	_ "github.com/st3v3nmw/lsfr/challenges/kvstore"
+	_ "github.com/littleclusters/lc/challenges/kvstore"
 )

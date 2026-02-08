@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/color"
-	_ "github.com/st3v3nmw/lsfr/challenges"
-	"github.com/st3v3nmw/lsfr/internal/config"
-	"github.com/st3v3nmw/lsfr/internal/registry"
+	_ "github.com/littleclusters/lc/challenges"
+	"github.com/littleclusters/lc/internal/config"
+	"github.com/littleclusters/lc/internal/registry"
 	commands "github.com/urfave/cli/v3"
 )
 
 const (
-	DocsBaseURL = "https://lsfr.io"
+	DocsBaseURL = "https://littleclusters.com"
 )
 
 var (
@@ -28,8 +28,8 @@ func createChallengeFiles(challenge *registry.Challenge, targetPath string) erro
 	scriptTemplate := `#!/bin/bash -e
 
 # This script builds and runs your implementation.
-# lsfr will execute this script to start your program.
-# "$@" passes command-line arguments from lsfr to your program, e.g.:
+# lc will execute this script to start your program.
+# "$@" passes command-line arguments from lc to your program, e.g.:
 #   --working-dir=<path>: Directory where your program should write files
 
 echo "Replace this line with the command that runs your implementation."
@@ -51,7 +51,7 @@ echo "Replace this line with the command that runs your implementation."
 		return fmt.Errorf("Failed to create README.md: %w", err)
 	}
 
-	// lsfr.yaml
+	// lc.yaml
 	cfg := &config.Config{
 		Challenge: challenge.Key,
 		Stages: config.Stages{
@@ -59,15 +59,15 @@ echo "Replace this line with the command that runs your implementation."
 			Completed: []string{},
 		},
 	}
-	configPath := filepath.Join(targetPath, "lsfr.yaml")
+	configPath := filepath.Join(targetPath, "lc.yaml")
 	err = config.SaveTo(cfg, configPath)
 	if err != nil {
-		return fmt.Errorf("Failed to create lsfr.yaml: %w", err)
+		return fmt.Errorf("Failed to create lc.yaml: %w", err)
 	}
 
 	// .gitignore
 	gitignorePath := filepath.Join(targetPath, ".gitignore")
-	gitignoreContent := `.lsfr/`
+	gitignoreContent := `.lc/`
 	err = os.WriteFile(gitignorePath, []byte(gitignoreContent), 0644)
 	if err != nil {
 		return fmt.Errorf("Failed to create .gitignore: %w", err)
@@ -81,7 +81,7 @@ func InitChallenge(ctx context.Context, cmd *commands.Command) error {
 	// Get Challenge
 	args := cmd.Args().Slice()
 	if len(args) == 0 {
-		return fmt.Errorf("Challenge name is required.\nUsage: lsfr init <challenge> [path]")
+		return fmt.Errorf("Challenge name is required.\nUsage: lc init <challenge> [path]")
 	}
 
 	challengeKey := args[0]
@@ -115,14 +115,14 @@ func InitChallenge(ctx context.Context, cmd *commands.Command) error {
 
 	fmt.Println("  run.sh       - Builds and runs your implementation")
 	fmt.Println("  README.md    - Challenge overview and requirements")
-	fmt.Println("  lsfr.yaml    - Tracks your progress")
-	fmt.Printf("  .gitignore   - Ignores .lsfr/ working directory (server files and logs)\n\n")
+	fmt.Println("  lc.yaml    - Tracks your progress")
+	fmt.Printf("  .gitignore   - Ignores .lc/ working directory (server files and logs)\n\n")
 
 	firstStageKey := challenge.StageOrder[0]
 	if targetPath == "." {
-		fmt.Printf("Implement %s stage, then run %s.\n", firstStageKey, yellow("'lsfr test'"))
+		fmt.Printf("Implement %s stage, then run %s.\n", firstStageKey, yellow("'lc test'"))
 	} else {
-		fmt.Printf("cd %s and implement %s stage, then run %s.\n", targetPath, firstStageKey, yellow("'lsfr test'"))
+		fmt.Printf("cd %s and implement %s stage, then run %s.\n", targetPath, firstStageKey, yellow("'lc test'"))
 	}
 
 	return nil
@@ -191,16 +191,16 @@ func TestStage(ctx context.Context, cmd *commands.Command) error {
 		challengeKey = cfg.Challenge
 		stageKey = cfg.Stages.Current
 	case 1:
-		// lsfr test <stage>
+		// lc test <stage>
 		challengeKey = cfg.Challenge
 		stageKey = cmd.Args().Slice()[0]
 	default:
-		return fmt.Errorf("Too many arguments.\nUsage: lsfr test [stage]")
+		return fmt.Errorf("Too many arguments.\nUsage: lc test [stage]")
 	}
 
 	passed, err := runStageTests(ctx, challengeKey, stageKey)
 	if passed {
-		fmt.Printf("\nRun %s to advance to the next stage.\n", yellow("'lsfr next'"))
+		fmt.Printf("\nRun %s to advance to the next stage.\n", yellow("'lc next'"))
 	} else {
 		guideURL := fmt.Sprintf("%s/%s/%s", DocsBaseURL, challengeKey, stageKey)
 		err = fmt.Errorf("\nRead the guide: \033]8;;%s\033\\%s/%s/%s\033]8;;\033\\\n", guideURL, DocsBaseURL, challengeKey, stageKey)
@@ -247,7 +247,7 @@ func NextStage(ctx context.Context, cmd *commands.Command) error {
 	// Check if already at final stage
 	if currentIndex == challenge.Len()-1 {
 		fmt.Printf("You've completed all stages for %s! 🎉\n\n", cfg.Challenge)
-		fmt.Printf("If you're on GitHub, consider adding 'lsfr' and 'lsfr-<language>' (e.g., 'lsfr-go', 'lsfr-rust') as topics to your repository.\n\n")
+		fmt.Printf("If you're on GitHub, consider adding 'lc' and 'lc-<language>' (e.g., 'lc-go', 'lc-rust') as topics to your repository.\n\n")
 		fmt.Printf("Try another challenge at \033]8;;%s/\033\\%s\033]8;;\033\\\n", DocsBaseURL, DocsBaseURL)
 
 		return config.Save(cfg)
@@ -269,7 +269,7 @@ func NextStage(ctx context.Context, cmd *commands.Command) error {
 	fmt.Printf("Advanced to %s: %s\n\n", nextStageKey, nextStage.Name)
 	guideURL := fmt.Sprintf("%s/%s/%s", DocsBaseURL, cfg.Challenge, nextStageKey)
 	fmt.Printf("Read the guide: \033]8;;%s\033\\%s/%s/%s\033]8;;\033\\\n\n", guideURL, DocsBaseURL, cfg.Challenge, nextStageKey)
-	fmt.Printf("Run %s when ready.\n", yellow("'lsfr test'"))
+	fmt.Printf("Run %s when ready.\n", yellow("'lc test'"))
 
 	return nil
 }
@@ -310,7 +310,7 @@ func ShowStatus(ctx context.Context, cmd *commands.Command) error {
 	// Next steps
 	guideURL := fmt.Sprintf("%s/%s/%s", DocsBaseURL, cfg.Challenge, cfg.Stages.Current)
 	fmt.Printf("\nRead the guide: \033]8;;%s\033\\%s/%s/%s\033]8;;\033\\\n\n", guideURL, DocsBaseURL, cfg.Challenge, cfg.Stages.Current)
-	fmt.Printf("Implement %s, then run %s.\n", cfg.Stages.Current, yellow("'lsfr test'"))
+	fmt.Printf("Implement %s, then run %s.\n", cfg.Stages.Current, yellow("'lc test'"))
 
 	return nil
 }
@@ -324,7 +324,7 @@ func ListChallenges(ctx context.Context, cmd *commands.Command) error {
 		fmt.Printf("  %-20s - %s (%d stages)\n", key, challenge.Name, challenge.Len())
 	}
 
-	fmt.Printf("\nStart with: lsfr init <challenge-name>\n")
+	fmt.Printf("\nStart with: lc init <challenge-name>\n")
 
 	return nil
 }

@@ -30,7 +30,7 @@ type Config struct {
 func DefaultConfig() *Config {
 	return &Config{
 		Command:                "./run.sh",
-		WorkingDir:             ".lsfr",
+		WorkingDir:             ".lc",
 		ProcessStartTimeout:    15 * time.Second,
 		ProcessShutdownTimeout: 15 * time.Second,
 		ProcessRestartDelay:    time.Second,
