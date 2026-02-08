@@ -8,8 +8,8 @@ import (
 
 	"github.com/fatih/color"
 	_ "github.com/littleclusters/lc/challenges"
-	"github.com/littleclusters/lc/internal/config"
 	"github.com/littleclusters/lc/internal/registry"
+	"github.com/littleclusters/lc/internal/state"
 	commands "github.com/urfave/cli/v3"
 )
 
@@ -51,18 +51,15 @@ echo "Replace this line with the command that runs your implementation."
 		return fmt.Errorf("Failed to create README.md: %w", err)
 	}
 
-	// lc.yaml
-	cfg := &config.Config{
+	// lc.state
+	cfg := &state.State{
 		Challenge: challenge.Key,
-		Stages: config.Stages{
-			Current:   challenge.StageOrder[0],
-			Completed: []string{},
-		},
+		Stage:     challenge.StageOrder[0],
 	}
-	configPath := filepath.Join(targetPath, "lc.yaml")
-	err = config.SaveTo(cfg, configPath)
+	statePath := filepath.Join(targetPath, "lc.state")
+	err = state.SaveTo(cfg, statePath)
 	if err != nil {
-		return fmt.Errorf("Failed to create lc.yaml: %w", err)
+		return fmt.Errorf("Failed to create lc.state: %w", err)
 	}
 
 	// .gitignore
@@ -115,7 +112,7 @@ func InitChallenge(ctx context.Context, cmd *commands.Command) error {
 
 	fmt.Println("  run.sh       - Builds and runs your implementation")
 	fmt.Println("  README.md    - Challenge overview and requirements")
-	fmt.Println("  lc.yaml    - Tracks your progress")
+	fmt.Println("  lc.state     - Tracks your progress")
 	fmt.Printf("  .gitignore   - Ignores .lc/ working directory (server files and logs)\n\n")
 
 	firstStageKey := challenge.StageOrder[0]
@@ -128,23 +125,13 @@ func InitChallenge(ctx context.Context, cmd *commands.Command) error {
 	return nil
 }
 
-func isStageCompleted(stageKey string, completedStages []string) bool {
-	for _, completed := range completedStages {
-		if completed == stageKey {
-			return true
-		}
-	}
-
-	return false
-}
-
-// validateEnvironment checks if run.sh exists and loads the config.
-func validateEnvironment() (*config.Config, error) {
+// validateEnvironment checks if run.sh exists and loads the state.
+func validateEnvironment() (*state.State, error) {
 	if _, err := os.Stat("run.sh"); os.IsNotExist(err) {
 		return nil, fmt.Errorf("run.sh not found\nCreate an executable run.sh script that starts your implementation.")
 	}
 
-	cfg, err := config.Load()
+	cfg, err := state.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -187,9 +174,9 @@ func TestStage(ctx context.Context, cmd *commands.Command) error {
 
 	switch cmd.NArg() {
 	case 0:
-		// Use current stage from config
+		// Use current stage from state
 		challengeKey = cfg.Challenge
-		stageKey = cfg.Stages.Current
+		stageKey = cfg.Stage
 	case 1:
 		// lc test <stage>
 		challengeKey = cfg.Challenge
@@ -222,26 +209,22 @@ func NextStage(ctx context.Context, cmd *commands.Command) error {
 		return err
 	}
 
-	// Check if stage is completed
-	currentIndex := challenge.StageIndex(cfg.Stages.Current)
+	// Check if current stage is completed
+	currentIndex := challenge.StageIndex(cfg.Stage)
 	if currentIndex == -1 {
-		return fmt.Errorf("Current stage '%s' not found in challenge", cfg.Stages.Current)
+		return fmt.Errorf("Current stage '%s' not found in challenge", cfg.Stage)
 	}
 
-	isCurrentCompleted := isStageCompleted(cfg.Stages.Current, cfg.Stages.Completed)
-	if !isCurrentCompleted {
-		passed, err := runStageTests(ctx, cfg.Challenge, cfg.Stages.Current)
-		if err != nil {
-			return err
-		}
+	// Run tests for current stage
+	passed, err := runStageTests(ctx, cfg.Challenge, cfg.Stage)
+	if err != nil {
+		return err
+	}
 
-		fmt.Println()
+	fmt.Println()
 
-		if !passed {
-			return fmt.Errorf("Complete %s before advancing.", cfg.Stages.Current)
-		}
-
-		cfg.Stages.Completed = append(cfg.Stages.Completed, cfg.Stages.Current)
+	if !passed {
+		return fmt.Errorf("Complete %s before advancing.", cfg.Stage)
 	}
 
 	// Check if already at final stage
@@ -249,13 +232,13 @@ func NextStage(ctx context.Context, cmd *commands.Command) error {
 		fmt.Printf("You've completed all stages for %s! 🎉\n\n", cfg.Challenge)
 		fmt.Printf("Try another challenge at \033]8;;%s/\033\\%s\033]8;;\033\\\n", DocsBaseURL, DocsBaseURL)
 
-		return config.Save(cfg)
+		return state.Save(cfg)
 	}
 
 	// Advance to next stage
 	nextStageKey := challenge.StageOrder[currentIndex+1]
-	cfg.Stages.Current = nextStageKey
-	err = config.Save(cfg)
+	cfg.Stage = nextStageKey
+	err = state.Save(cfg)
 	if err != nil {
 		return err
 	}
@@ -276,7 +259,7 @@ func NextStage(ctx context.Context, cmd *commands.Command) error {
 // ShowStatus displays the current challenge progress and next steps.
 func ShowStatus(ctx context.Context, cmd *commands.Command) error {
 	// Summary
-	cfg, err := config.Load()
+	cfg, err := state.Load()
 	if err != nil {
 		return err
 	}
@@ -290,16 +273,17 @@ func ShowStatus(ctx context.Context, cmd *commands.Command) error {
 
 	// Progress
 	fmt.Println("Progress:")
-	for _, stageKey := range challenge.StageOrder {
+	currentIndex := challenge.StageIndex(cfg.Stage)
+	for i, stageKey := range challenge.StageOrder {
 		stage, err := challenge.GetStage(stageKey)
 		if err != nil {
 			continue
 		}
 
-		isCompleted := isStageCompleted(stageKey, cfg.Stages.Completed)
+		isCompleted := i < currentIndex
 		if isCompleted {
 			fmt.Printf("✓ %-18s - %s\n", stageKey, stage.Name)
-		} else if stageKey == cfg.Stages.Current {
+		} else if stageKey == cfg.Stage {
 			fmt.Printf("→ %-18s - %s\n", stageKey, stage.Name)
 		} else {
 			fmt.Printf("  %-18s - %s\n", stageKey, stage.Name)
@@ -307,9 +291,9 @@ func ShowStatus(ctx context.Context, cmd *commands.Command) error {
 	}
 
 	// Next steps
-	guideURL := fmt.Sprintf("%s/%s/%s", DocsBaseURL, cfg.Challenge, cfg.Stages.Current)
-	fmt.Printf("\nRead the guide: \033]8;;%s\033\\%s/%s/%s\033]8;;\033\\\n\n", guideURL, DocsBaseURL, cfg.Challenge, cfg.Stages.Current)
-	fmt.Printf("Implement %s, then run %s.\n", cfg.Stages.Current, yellow("'lc test'"))
+	guideURL := fmt.Sprintf("%s/%s/%s", DocsBaseURL, cfg.Challenge, cfg.Stage)
+	fmt.Printf("\nRead the guide: \033]8;;%s\033\\%s/%s/%s\033]8;;\033\\\n\n", guideURL, DocsBaseURL, cfg.Challenge, cfg.Stage)
+	fmt.Printf("Implement %s, then run %s.\n", cfg.Stage, yellow("'lc test'"))
 
 	return nil
 }
