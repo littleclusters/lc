@@ -5,8 +5,8 @@ go 1.26
 require (
 	github.com/fatih/color v1.19.0
 	github.com/goccy/go-yaml v1.19.2
-	github.com/tidwall/gjson v1.18.0
-	github.com/urfave/cli/v3 v3.8.0
+	github.com/tidwall/gjson v1.19.0
+	github.com/urfave/cli/v3 v3.9.0
 )
 
 require (
